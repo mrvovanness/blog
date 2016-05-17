@@ -38,6 +38,8 @@ activate :blog do |blog|
 
   blog.tag_template = "tag.html"
   blog.calendar_template = "calendar.html"
+  blog.sources = "{category}/{year}-{month}-{day}-{title}.html"
+  blog.permalink = "{category}/{year}/{month}/{day}/{title}.html"
 
   # Enable pagination
   # blog.paginate = true
