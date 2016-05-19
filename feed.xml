@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Blog Name</title>
+  <subtitle>Blog subtitle</subtitle>
+  <id>http://blog.url.com/</id>
+  <link href="http://blog.url.com/"/>
+  <link href="http://blog.url.com/feed.xml" rel="self"/>
+  <updated>2016-05-19T05:00:00+05:00</updated>
+  <author>
+    <name>Blog Author</name>
+  </author>
+  <entry>
+    <title>First practical use of git hooks</title>
+    <link rel="alternate" href="http://blog.url.com/coding/2016/05/19/middleman-git-deploy.html"/>
+    <id>http://blog.url.com/coding/2016/05/19/middleman-git-deploy.html</id>
+    <published>2016-05-19T05:00:00+05:00</published>
+    <updated>2016-05-19T12:58:27+05:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;Recently I experienced one problem deploying static site on github pages. It was generated using &lt;a href="https://middlemanapp.com"&gt;middleman&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Middleman generates the folder &lt;code&gt;build&lt;/code&gt; with all html/css/js stuff inside it. This folder must be pushed on &lt;em&gt;gh-pages&lt;/em&gt; branch of github remote repo. So I thought about creating new local repo on each build and pushing then to this branch. As usual there is several gems in ruby community that solved this problem. On the other hand I remembered that git can fire off custom scripts on certain events.&lt;/p&gt;
+
+&lt;p&gt;I added this commands to &lt;code&gt;.git/hooks/post-commit&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;rm -rf build
+bundle exec middleman build
+cd build
+git init
+git add .
+git commit -m "Updates"
+git remote add origin git@github.com:mrvovanness/blog.git
+git push --force origin master:gh-pages
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These above commands make the following: remove old build folder, run generation of static site, initialize new git repo inside the refreshed site, commit all files, add remote(I already had this remote created). Finally forced push in gh-pages branch completed this deploy. Done!&lt;/p&gt;
+
+&lt;p&gt;Of course such forced push rewrites files and commit history in particular gh-pages branch on github, but this isn't a concern because I keep this history in master branch.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Update&lt;/strong&gt;. I was little annoyed that site was built and deployed on each commit. I ended up by restricting this action to committing on master branch. I wrapped above code in this conditional statement:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;current_branch=$(git symbolic-ref --short HEAD)
+if [ "$current_branch" == "master" ]; then
+...
+fi
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This bash command-like style of code looks ugly for me as Ruby lover but in this scenario it appropriate. But what is "git symbolic-ref?". Symbolic ref is an regular file inside &lt;code&gt;.git&lt;/code&gt; folder with relative path to current branch (for example &lt;code&gt;.git/heads/master&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;Then I moved above code to &lt;code&gt;.git/hooks/post-merge&lt;/code&gt; and now deploy is triggered after merging  any branch to master.&lt;/p&gt;
+
+&lt;p&gt;And it is important to add executable rights to script files&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ chmod +x .git/hooks/post-merge`
+&lt;/code&gt;&lt;/pre&gt;
+
+</content>
+  </entry>
+  <entry>
+    <title>Hello, humans!</title>
+    <link rel="alternate" href="http://blog.url.com/daily/2016/05/17/hello-humans.html"/>
+    <id>http://blog.url.com/daily/2016/05/17/hello-humans.html</id>
+    <published>2016-05-17T05:00:00+05:00</published>
+    <updated>2016-05-17T21:27:28+05:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;Hi, I am Vladimir, I love to code and like to write my thoughts and I want explore how to create and maintain my own blog. I am quite new to both worlds - coding and blogging, but this is a main reason to start :)&lt;/p&gt;
+</content>
+  </entry>
+</feed>

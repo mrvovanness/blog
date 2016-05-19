@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>mrvovanness - First practical use of git hooks</title>
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+  </head>
+  <body style="max-width: 800px; margin: 0 auto;">
+
+    <div id="main" role="main">
+      <p>Recently I experienced one problem deploying static site on github pages. It was generated using <a href="https://middlemanapp.com">middleman</a>.</p>
+
+<p>Middleman generates the folder <code>build</code> with all html/css/js stuff inside it. This folder must be pushed on <em>gh-pages</em> branch of github remote repo. So I thought about creating new local repo on each build and pushing then to this branch. As usual there is several gems in ruby community that solved this problem. On the other hand I remembered that git can fire off custom scripts on certain events.</p>
+
+<p>I added this commands to <code>.git/hooks/post-commit</code>:</p>
+
+<pre><code>rm -rf build
+bundle exec middleman build
+cd build
+git init
+git add .
+git commit -m "Updates"
+git remote add origin git@github.com:mrvovanness/blog.git
+git push --force origin master:gh-pages
+</code></pre>
+
+<p>These above commands make the following: remove old build folder, run generation of static site, initialize new git repo inside the refreshed site, commit all files, add remote(I already had this remote created). Finally forced push in gh-pages branch completed this deploy. Done!</p>
+
+<p>Of course such forced push rewrites files and commit history in particular gh-pages branch on github, but this isn't a concern because I keep this history in master branch.</p>
+
+<p><strong>Update</strong>. I was little annoyed that site was built and deployed on each commit. I ended up by restricting this action to committing on master branch. I wrapped above code in this conditional statement:</p>
+
+<pre><code>current_branch=$(git symbolic-ref --short HEAD)
+if [ "$current_branch" == "master" ]; then
+...
+fi
+</code></pre>
+
+<p>This bash command-like style of code looks ugly for me as Ruby lover but in this scenario it appropriate. But what is "git symbolic-ref?". Symbolic ref is an regular file inside <code>.git</code> folder with relative path to current branch (for example <code>.git/heads/master</code>).</p>
+
+<p>Then I moved above code to <code>.git/hooks/post-merge</code> and now deploy is triggered after merging  any branch to master.</p>
+
+<p>And it is important to add executable rights to script files</p>
+
+<pre><code>$ chmod +x .git/hooks/post-merge`
+</code></pre>
+
+
+    </div>
+
+    <aside>
+      <!--
+      <h2>Recent Articles</h2>
+      <ol>
+          <li><a href="middleman-git-deploy.html">First practical use of git hooks</a> <span>May 19</span></li>
+          <li><a href="../../../../daily/2016/05/17/hello-humans.html">Hello, humans!</a> <span>May 17</span></li>
+      </ol>
+
+      <h2>Tags</h2>
+      <ol>
+          <li><a href="../../../../tags/git.html">git (1)</a></li>
+          <li><a href="../../../../tags/static-sites.html">static sites (1)</a></li>
+          <li><a href="../../../../tags/deploy.html">deploy (1)</a></li>
+          <li><a href="../../../../tags/thoughts.html">thoughts (1)</a></li>
+      </ol>
+
+      <h2>By Year</h2>
+      <ol>
+          <li><a href="../../../../2016.html">2016 (2)</a></li>
+      </ol>
+      -->
+    </aside>
+  </body>
+</html>
